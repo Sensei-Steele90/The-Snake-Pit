@@ -1,0 +1,1054 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>The Snake Pit</title>
+  <style>
+    :root{
+      --bg:#0b0f12;
+      --panel:#0f151a;
+      --panel2:#121a21;
+      --text:#e7eef6;
+      --muted:#9fb0c2;
+      --line:#1e2a35;
+      --accent:#7CFF6B;
+      --danger:#ff5c5c;
+      --warn:#ffd36b;
+      --ok:#6bd6ff;
+      --shadow: 0 12px 40px rgba(0,0,0,.45);
+      --radius: 16px;
+      --radius2: 12px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans", "Liberation Sans", sans-serif;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family:var(--sans);
+      background: radial-gradient(1200px 700px at 15% 20%, rgba(124,255,107,.08), transparent 55%),
+                  radial-gradient(900px 600px at 80% 30%, rgba(107,214,255,.06), transparent 55%),
+                  radial-gradient(700px 500px at 70% 85%, rgba(255,92,92,.04), transparent 55%),
+                  var(--bg);
+      color:var(--text);
+    }
+    a{color:inherit}
+    button, input, select, textarea{font:inherit}
+    .app{
+      height:100%;
+      display:grid;
+      grid-template-columns: 280px 320px 1fr;
+      gap:14px;
+      padding:14px;
+    }
+    .panel{
+      background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01));
+      border:1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+      min-height:0;
+    }
+    .panel header{
+      padding:14px 14px 10px;
+      border-bottom:1px solid var(--line);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      background: rgba(0,0,0,.18);
+    }
+    .brand{
+      display:flex;
+      gap:10px;
+      align-items:center;
+    }
+    .logo{
+      width:34px;height:34px;border-radius:12px;
+      display:grid;place-items:center;
+      border:1px solid rgba(124,255,107,.35);
+      background: radial-gradient(circle at 30% 30%, rgba(124,255,107,.18), rgba(124,255,107,.02));
+      font-family:var(--mono);
+      color:var(--accent);
+      font-weight:700;
+      letter-spacing:.5px;
+    }
+    .title{
+      display:flex;flex-direction:column;line-height:1.1;
+    }
+    .title strong{font-size:14px}
+    .title span{font-size:12px;color:var(--muted)}
+    .pill{
+      font-size:12px;
+      padding:6px 10px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.03);
+      color:var(--muted);
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      white-space:nowrap;
+    }
+    .dot{
+      width:8px;height:8px;border-radius:999px;background:var(--accent);
+      box-shadow: 0 0 14px rgba(124,255,107,.45);
+    }
+    .content{
+      padding:12px 14px 14px;
+      min-height:0;
+      overflow:auto;
+    }
+    .stack{display:flex;flex-direction:column;gap:10px}
+    .row{display:flex;gap:10px;align-items:center}
+    .grow{flex:1}
+    .muted{color:var(--muted)}
+    .small{font-size:12px}
+    .divider{height:1px;background:var(--line);margin:10px 0}
+    .btn{
+      cursor:pointer;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.03);
+      color:var(--text);
+      padding:10px 12px;
+      border-radius: 12px;
+      transition: transform .05s ease, border-color .2s ease, background .2s ease;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+      user-select:none;
+    }
+    .btn:hover{border-color: rgba(124,255,107,.25); background: rgba(124,255,107,.06)}
+    .btn:active{transform: translateY(1px)}
+    .btn.primary{
+      border-color: rgba(124,255,107,.35);
+      background: rgba(124,255,107,.10);
+      color: var(--text);
+    }
+    .btn.danger{
+      border-color: rgba(255,92,92,.35);
+      background: rgba(255,92,92,.08);
+    }
+    .btn.ghost{
+      background: transparent;
+    }
+    .input, .select, .textarea{
+      width:100%;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.02);
+      color: var(--text);
+      padding:10px 12px;
+      border-radius: 12px;
+      outline:none;
+    }
+    .textarea{min-height:92px; resize: vertical}
+    .hint{font-size:12px;color:var(--muted);line-height:1.3}
+    .list{
+      display:flex;flex-direction:column;gap:6px;
+    }
+    .item{
+      border:1px solid transparent;
+      background: rgba(255,255,255,.02);
+      padding:10px 10px;
+      border-radius: 12px;
+      cursor:pointer;
+      transition: border-color .15s ease, background .15s ease;
+      display:flex;
+      flex-direction:column;
+      gap:2px;
+    }
+    .item:hover{border-color: rgba(124,255,107,.18); background: rgba(124,255,107,.04)}
+    .item.active{
+      border-color: rgba(124,255,107,.35);
+      background: rgba(124,255,107,.08);
+    }
+    .item strong{font-size:13px}
+    .item span{font-size:12px;color:var(--muted)}
+    .tag{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      font-size:11px;
+      padding:5px 8px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.02);
+      color: var(--muted);
+      white-space:nowrap;
+    }
+    .tag.good{border-color: rgba(124,255,107,.28); background: rgba(124,255,107,.08); color: rgba(231,238,246,.92)}
+    .tag.warn{border-color: rgba(255,211,107,.28); background: rgba(255,211,107,.08); color: rgba(231,238,246,.92)}
+    .tag.info{border-color: rgba(107,214,255,.28); background: rgba(107,214,255,.08); color: rgba(231,238,246,.92)}
+    .post{
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.02);
+      border-radius: var(--radius2);
+      padding:12px 12px;
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+    }
+    .post-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+    .post-meta{display:flex;flex-direction:column;gap:2px}
+    .post-meta strong{font-size:13px}
+    .post-meta span{font-size:12px;color:var(--muted)}
+    .post-body{white-space:pre-wrap; line-height:1.35; color: rgba(231,238,246,.95)}
+    .post-footer{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between}
+    .chipbar{display:flex;flex-wrap:wrap;gap:6px}
+    .comment{
+      margin-top:8px;
+      padding-top:8px;
+      border-top:1px solid var(--line);
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+    }
+    .comment-item{
+      border:1px solid rgba(255,255,255,.04);
+      background: rgba(0,0,0,.16);
+      border-radius: 12px;
+      padding:10px 10px;
+    }
+    .comment-item strong{font-size:12px}
+    .comment-item span{font-size:12px;color:var(--muted)}
+    .comment-item p{margin:6px 0 0; font-size:13px; white-space:pre-wrap; line-height:1.35}
+    .grid2{display:grid; grid-template-columns: 1fr 1fr; gap:10px}
+    .kbd{
+      font-family:var(--mono);
+      font-size:11px;
+      padding:3px 6px;
+      border-radius:8px;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.02);
+      color: var(--muted);
+    }
+    .footer-note{
+      font-size:12px;color:var(--muted);
+      padding:12px 14px;
+      border-top:1px solid var(--line);
+      background: rgba(0,0,0,.18);
+    }
+    @media (max-width: 1100px){
+      .app{grid-template-columns: 280px 1fr; grid-template-rows: auto 1fr; }
+      .panel.mid{grid-column:1 / -1}
+      .panel.main{grid-column:1 / -1}
+    }
+    @media (max-width: 720px){
+      .app{grid-template-columns:1fr}
+      .panel{border-radius: 14px}
+      .grid2{grid-template-columns:1fr}
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <!-- LEFT: Profile / Roles -->
+    <section class="panel left" id="leftPanel">
+      <header>
+        <div class="brand">
+          <div class="logo">SP</div>
+          <div class="title">
+            <strong>The Snake Pit</strong>
+            <span class="muted">Apex community hub (simple)</span>
+          </div>
+        </div>
+        <div class="pill" title="Local-only demo">
+          <span class="dot"></span>
+          <span>Local Demo</span>
+        </div>
+      </header>
+
+      <div class="content stack">
+        <div class="stack">
+          <label class="small muted">Display name</label>
+          <input class="input" id="displayName" placeholder="e.g., Jud" />
+          <div class="grid2">
+            <div class="stack">
+              <label class="small muted">Role</label>
+              <select class="select" id="roleSelect"></select>
+            </div>
+            <div class="stack">
+              <label class="small muted">Quick actions</label>
+              <button class="btn primary" id="saveProfile">Save</button>
+            </div>
+          </div>
+          <div class="hint">
+            This is a lightweight, single-file prototype. It saves to your browser (localStorage).
+            No server, no accounts, no costs — just a clean starting point.
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="stack">
+          <div class="row" style="justify-content:space-between">
+            <strong style="font-size:13px">Your access</strong>
+            <span class="kbd">role-gated</span>
+          </div>
+          <div class="list" id="accessList"></div>
+          <div class="hint">
+            Channels appear only if your role is allowed. (Example: Trialists won’t see sparring clips.)
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="stack">
+          <strong style="font-size:13px">Admin tools (demo)</strong>
+          <div class="hint">Coach/Admin can create channels. In a real app this would be server-validated.</div>
+          <div class="row">
+            <input class="input grow" id="newChannelName" placeholder="New channel name (e.g., Technique Library)" />
+          </div>
+          <div class="grid2">
+            <div class="stack">
+              <label class="small muted">Visibility</label>
+              <select class="select" id="newChannelVisibility"></select>
+            </div>
+            <div class="stack">
+              <label class="small muted">Create</label>
+              <button class="btn" id="createChannel">Add channel</button>
+            </div>
+          </div>
+          <button class="btn danger" id="resetAll">Reset demo data</button>
+        </div>
+      </div>
+
+      <div class="footer-note">
+        Tip: host this free on GitHub Pages/Netlify/Vercel. Later we can add real logins + storage.
+      </div>
+    </section>
+
+    <!-- MIDDLE: Channels -->
+    <section class="panel mid" id="midPanel">
+      <header>
+        <div class="row" style="gap:10px">
+          <strong style="font-size:13px">Channels</strong>
+          <span class="tag info" id="roleBadge"></span>
+        </div>
+        <div class="row" style="gap:8px">
+          <input class="input" id="channelSearch" placeholder="Search channels…" />
+        </div>
+      </header>
+      <div class="content">
+        <div class="list" id="channelList"></div>
+      </div>
+    </section>
+
+    <!-- RIGHT: Posts -->
+    <section class="panel main" id="mainPanel">
+      <header>
+        <div class="stack" style="gap:2px">
+          <strong id="activeChannelTitle" style="font-size:14px">Select a channel</strong>
+          <span id="activeChannelDesc" class="muted small"></span>
+        </div>
+        <div class="row">
+          <span class="tag good" id="activeChannelGate">—</span>
+        </div>
+      </header>
+
+      <div class="content stack" id="mainContent">
+        <div class="post" id="composer">
+          <div class="row" style="justify-content:space-between">
+            <strong style="font-size:13px">Create post</strong>
+            <span class="hint" id="composerHint"></span>
+          </div>
+
+          <div class="grid2">
+            <div class="stack">
+              <label class="small muted">Title</label>
+              <input class="input" id="postTitle" placeholder="e.g., Tier 1 focus this week" />
+            </div>
+            <div class="stack">
+              <label class="small muted">Tags</label>
+              <select class="select" id="postTag">
+                <option value="">(no tag)</option>
+                <option>Tier 1</option>
+                <option>Tier 2</option>
+                <option>Tier 3</option>
+                <option>Footwork</option>
+                <option>Counters</option>
+                <option>Padwork</option>
+                <option>Sparring</option>
+                <option>Strength & Conditioning</option>
+                <option>Challenge</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="stack">
+            <label class="small muted">Body</label>
+            <textarea class="textarea" id="postBody" placeholder="Write the post…"></textarea>
+            <div class="grid2">
+              <div class="stack">
+                <label class="small muted">Media link (optional)</label>
+                <input class="input" id="postMedia" placeholder="Paste YouTube/Drive/Instagram link…" />
+              </div>
+              <div class="stack">
+                <label class="small muted">Post</label>
+                <button class="btn primary" id="publishPost">Publish</button>
+              </div>
+            </div>
+            <div class="hint">
+              This demo uses links for media (cheap and easy). Later we can add uploads, approvals, and a “social-ready” board.
+            </div>
+          </div>
+        </div>
+
+        <div class="row" style="justify-content:space-between; align-items:center">
+          <strong style="font-size:13px">Posts</strong>
+          <div class="row" style="gap:8px">
+            <button class="btn ghost" id="togglePinned">Show pinned only</button>
+            <button class="btn ghost" id="sortNewest">Newest</button>
+          </div>
+        </div>
+
+        <div class="stack" id="postList"></div>
+      </div>
+
+      <div class="footer-note">
+        Keyboard: <span class="kbd">Ctrl</span> + <span class="kbd">Enter</span> to publish a post/comment.
+      </div>
+    </section>
+  </div>
+
+  <script>
+    /***********************
+     * THE SNAKE PIT (MVP)
+     * - single-file demo
+     * - localStorage “database”
+     * - role-gated channels
+     ***********************/
+
+    const STORAGE_KEY = "snakepit_v1";
+
+    const ROLES = [
+      { id: "owner", name: "Owner (Jud)" },
+      { id: "admin", name: "Admin" },
+      { id: "coach", name: "Coach" },
+      { id: "assistant", name: "Assistant Coach" },
+      { id: "adults", name: "Adults" },
+      { id: "juniors", name: "Juniors" },
+      { id: "parents", name: "Parents" },
+      { id: "trialist", name: "Trialist" },
+    ];
+
+    // Visibility presets (simple + sane)
+    const VISIBILITY_PRESETS = [
+      { id: "everyone", label: "Everyone", allowed: ROLES.map(r => r.id) },
+      { id: "members", label: "Members (Adults/Juniors/Parents + staff)", allowed: ["owner","admin","coach","assistant","adults","juniors","parents"] },
+      { id: "staff", label: "Staff only (Owner/Admin/Coach/Assistant)", allowed: ["owner","admin","coach","assistant"] },
+      { id: "adults", label: "Adults + staff", allowed: ["owner","admin","coach","assistant","adults"] },
+      { id: "juniors", label: "Juniors + staff", allowed: ["owner","admin","coach","assistant","juniors"] },
+      { id: "parents", label: "Parents + staff", allowed: ["owner","admin","coach","assistant","parents"] },
+      { id: "trialist", label: "Trialists + staff", allowed: ["owner","admin","coach","assistant","trialist"] },
+    ];
+
+    const DEFAULT_STATE = {
+      profile: { name: "Guest", role: "trialist" },
+      channels: [
+        {
+          id: uid(),
+          name: "📌 Announcements",
+          desc: "Coach updates, key dates, big news.",
+          visibility: "everyone",
+          postPermissions: ["owner","admin","coach","assistant"], // who can post
+        },
+        {
+          id: uid(),
+          name: "🗓 Timetable & Events",
+          desc: "Class times, changes, grading dates, club events.",
+          visibility: "everyone",
+          postPermissions: ["owner","admin","coach","assistant"],
+        },
+        {
+          id: uid(),
+          name: "🥋 Technique Library",
+          desc: "Clips, notes, drill breakdowns. Keep it clean and useful.",
+          visibility: "members",
+          postPermissions: ["owner","admin","coach","assistant","adults","juniors"],
+        },
+        {
+          id: uid(),
+          name: "🧠 Standards & Etiquette",
+          desc: "Pinned expectations: pad holding, bag partner standards, sparring rules.",
+          visibility: "members",
+          postPermissions: ["owner","admin","coach","assistant"],
+        },
+        {
+          id: uid(),
+          name: "🔥 Weekly Challenges / WOD",
+          desc: "Weekly work. Post results, clips, and reps.",
+          visibility: "members",
+          postPermissions: ["owner","admin","coach","assistant","adults","juniors"],
+        },
+        {
+          id: uid(),
+          name: "👨‍👩‍👧 Parents Corner",
+          desc: "Parents-only updates and questions.",
+          visibility: "parents",
+          postPermissions: ["owner","admin","coach","assistant","parents"],
+        },
+        {
+          id: uid(),
+          name: "🧪 Trialists – Start Here",
+          desc: "Intro info, expectations, trial booking links.",
+          visibility: "trialist",
+          postPermissions: ["owner","admin","coach","assistant"],
+        }
+      ],
+      postsByChannel: {}, // { channelId: [post, ...] }
+      ui: {
+        activeChannelId: null,
+        pinnedOnly: false,
+        sort: "newest",
+        channelSearch: ""
+      }
+    };
+
+    // Seed a couple of example posts
+    function seedPosts(state){
+      const ch = state.channels;
+      const findByName = (frag) => ch.find(c => c.name.includes(frag));
+      const announcements = findByName("Announcements")?.id;
+      const standards = findByName("Standards")?.id;
+      const trialists = findByName("Trialists")?.id;
+
+      if (announcements && !state.postsByChannel[announcements]){
+        state.postsByChannel[announcements] = [
+          makePost({
+            author:"Jud",
+            role:"coach",
+            title:"March intake is open",
+            body:"Doors are open all month.\n\n✅ Book a trial\n✅ Bring water\n✅ Arrive 10 mins early\n\nWe train hard. We train sharp. We train clean.",
+            tag:"Info",
+            media:"",
+            pinned:true
+          })
+        ];
+      }
+      if (standards && !state.postsByChannel[standards]){
+        state.postsByChannel[standards] = [
+          makePost({
+            author:"Jud",
+            role:"coach",
+            title:"Pad Holding Standard (non-negotiable)",
+            body:"You are a training partner — not a target stand.\n\n• Move like an opponent\n• Match intensity\n• Give feedback\n• Reset chaos\n\nIf your partner gets better because of your pad holding, you trained well.",
+            tag:"Standards",
+            media:"",
+            pinned:true
+          })
+        ];
+      }
+      if (trialists && !state.postsByChannel[trialists]){
+        state.postsByChannel[trialists] = [
+          makePost({
+            author:"Jud",
+            role:"coach",
+            title:"Start Here — what to expect",
+            body:"This is not a fitness class.\nThis is structured striking.\n\nWear comfortable kit. Bring water. Be ready to learn.\n\nMessage the coach if you’ve got injuries so we can adapt safely.",
+            tag:"Info",
+            media:"",
+            pinned:true
+          })
+        ];
+      }
+    }
+
+    function makePost({author, role, title, body, tag, media, pinned=false}){
+      return {
+        id: uid(),
+        author,
+        authorRole: role,
+        title: title.trim(),
+        body: body.trim(),
+        tag: tag || "",
+        media: (media || "").trim(),
+        pinned,
+        createdAt: new Date().toISOString(),
+        comments: []
+      };
+    }
+
+    function loadState(){
+      try{
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw){
+          const st = structuredClone(DEFAULT_STATE);
+          seedPosts(st);
+          // Set default active channel to Announcements (first visible)
+          st.ui.activeChannelId = st.channels[0].id;
+          saveState(st);
+          return st;
+        }
+        const parsed = JSON.parse(raw);
+        // Basic migration safety
+        return { ...structuredClone(DEFAULT_STATE), ...parsed };
+      }catch(e){
+        console.warn("State load failed, resetting.", e);
+        const st = structuredClone(DEFAULT_STATE);
+        seedPosts(st);
+        st.ui.activeChannelId = st.channels[0].id;
+        saveState(st);
+        return st;
+      }
+    }
+    function saveState(state){
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    }
+    function resetState(){
+      localStorage.removeItem(STORAGE_KEY);
+      state = loadState();
+      renderAll();
+    }
+
+    function uid(){
+      return Math.random().toString(16).slice(2) + "-" + Math.random().toString(16).slice(2);
+    }
+
+    function roleName(roleId){
+      return ROLES.find(r => r.id === roleId)?.name ?? roleId;
+    }
+
+    function presetById(id){
+      return VISIBILITY_PRESETS.find(p => p.id === id);
+    }
+
+    function canSeeChannel(channel, roleId){
+      const preset = presetById(channel.visibility);
+      return preset?.allowed?.includes(roleId) ?? false;
+    }
+
+    function canPostInChannel(channel, roleId){
+      return (channel.postPermissions || []).includes(roleId);
+    }
+
+    function fmtTime(iso){
+      const d = new Date(iso);
+      return d.toLocaleString(undefined, { year:"numeric", month:"short", day:"2-digit", hour:"2-digit", minute:"2-digit" });
+    }
+
+    // DOM refs
+    const $ = (id) => document.getElementById(id);
+
+    let state = loadState();
+
+    // Populate role/preset selects
+    function initSelects(){
+      const roleSel = $("roleSelect");
+      roleSel.innerHTML = ROLES.map(r => `<option value="${r.id}">${escapeHtml(r.name)}</option>`).join("");
+
+      const visSel = $("newChannelVisibility");
+      visSel.innerHTML = VISIBILITY_PRESETS.map(p => `<option value="${p.id}">${escapeHtml(p.label)}</option>`).join("");
+    }
+
+    // Render
+    function renderProfile(){
+      $("displayName").value = state.profile.name;
+      $("roleSelect").value = state.profile.role;
+      $("roleBadge").textContent = roleName(state.profile.role);
+    }
+
+    function renderAccessList(){
+      const roleId = state.profile.role;
+      const visible = state.channels.filter(c => canSeeChannel(c, roleId));
+      const el = $("accessList");
+      el.innerHTML = visible.map(c => {
+        const preset = presetById(c.visibility);
+        return `
+          <div class="item">
+            <strong>${escapeHtml(c.name)}</strong>
+            <span>${escapeHtml(preset?.label ?? "—")}</span>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function renderChannelList(){
+      const roleId = state.profile.role;
+      const q = (state.ui.channelSearch || "").toLowerCase().trim();
+      const visible = state.channels
+        .filter(c => canSeeChannel(c, roleId))
+        .filter(c => !q || (c.name + " " + (c.desc||"")).toLowerCase().includes(q));
+
+      const list = $("channelList");
+      list.innerHTML = visible.map(c => {
+        const active = c.id === state.ui.activeChannelId ? "active" : "";
+        const preset = presetById(c.visibility);
+        return `
+          <div class="item ${active}" data-channel="${c.id}">
+            <strong>${escapeHtml(c.name)}</strong>
+            <span>${escapeHtml(c.desc || preset?.label || "")}</span>
+          </div>
+        `;
+      }).join("") || `<div class="hint">No channels match your search.</div>`;
+
+      // click handlers
+      list.querySelectorAll("[data-channel]").forEach(node => {
+        node.addEventListener("click", () => {
+          state.ui.activeChannelId = node.getAttribute("data-channel");
+          saveState(state);
+          renderMain();
+          renderChannelList();
+        });
+      });
+
+      // If active channel is no longer visible (role changed), move to first visible
+      if (state.ui.activeChannelId){
+        const active = state.channels.find(c => c.id === state.ui.activeChannelId);
+        if (!active || !canSeeChannel(active, roleId)){
+          state.ui.activeChannelId = visible[0]?.id ?? null;
+          saveState(state);
+        }
+      } else {
+        state.ui.activeChannelId = visible[0]?.id ?? null;
+        saveState(state);
+      }
+    }
+
+    function renderMain(){
+      const roleId = state.profile.role;
+      const channel = state.channels.find(c => c.id === state.ui.activeChannelId);
+
+      if (!channel){
+        $("activeChannelTitle").textContent = "Select a channel";
+        $("activeChannelDesc").textContent = "";
+        $("activeChannelGate").textContent = "—";
+        $("postList").innerHTML = `<div class="hint">Pick a channel from the middle column.</div>`;
+        $("composerHint").textContent = "";
+        $("composer").style.opacity = 0.7;
+        return;
+      }
+
+      const preset = presetById(channel.visibility);
+      $("activeChannelTitle").textContent = channel.name;
+      $("activeChannelDesc").textContent = channel.desc || "";
+      $("activeChannelGate").textContent = preset?.label ?? "—";
+
+      // Composer permission
+      const allowedToPost = canPostInChannel(channel, roleId);
+      $("composerHint").textContent = allowedToPost ? "You can post here." : "Posting restricted in this channel.";
+      $("publishPost").disabled = !allowedToPost;
+      $("publishPost").style.opacity = allowedToPost ? 1 : 0.5;
+
+      // Render posts
+      const posts = (state.postsByChannel[channel.id] || []).slice();
+
+      let filtered = posts;
+      if (state.ui.pinnedOnly) filtered = filtered.filter(p => p.pinned);
+
+      filtered.sort((a,b) => {
+        if (state.ui.sort === "newest") return new Date(b.createdAt) - new Date(a.createdAt);
+        return new Date(a.createdAt) - new Date(b.createdAt);
+      });
+
+      const list = $("postList");
+      if (!filtered.length){
+        list.innerHTML = `<div class="hint">No posts yet. Break the silence.</div>`;
+        return;
+      }
+
+      list.innerHTML = filtered.map(p => renderPostCard(channel, p)).join("");
+
+      // Attach handlers (pin/delete/comment)
+      list.querySelectorAll("[data-pin]").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const postId = btn.getAttribute("data-pin");
+          togglePin(channel.id, postId);
+        });
+      });
+      list.querySelectorAll("[data-del]").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const postId = btn.getAttribute("data-del");
+          deletePost(channel.id, postId);
+        });
+      });
+      list.querySelectorAll("[data-comment]").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const postId = btn.getAttribute("data-comment");
+          const input = list.querySelector(`[data-commentbox="${postId}"]`);
+          const text = (input?.value || "").trim();
+          if (!text) return;
+          addComment(channel.id, postId, text);
+          input.value = "";
+          renderMain();
+        });
+      });
+      list.querySelectorAll("[data-commentbox]").forEach(box => {
+        box.addEventListener("keydown", (e) => {
+          if (e.key === "Enter" && (e.ctrlKey || e.metaKey)){
+            const postId = box.getAttribute("data-commentbox");
+            const btn = list.querySelector(`[data-comment="${postId}"]`);
+            btn?.click();
+          }
+        });
+      });
+    }
+
+    function renderPostCard(channel, post){
+      const roleId = state.profile.role;
+      const canModerate = ["owner","admin","coach"].includes(roleId);
+      const canPin = ["owner","admin","coach","assistant"].includes(roleId);
+      const tag = post.tag ? `<span class="tag info">${escapeHtml(post.tag)}</span>` : "";
+      const pin = post.pinned ? `<span class="tag good">Pinned</span>` : "";
+      const media = post.media ? `
+        <div class="hint">
+          Media: <a href="${escapeAttr(post.media)}" target="_blank" rel="noreferrer">${escapeHtml(post.media)}</a>
+        </div>` : "";
+
+      const commentsHtml = (post.comments || []).map(c => `
+        <div class="comment-item">
+          <div class="row" style="justify-content:space-between">
+            <div>
+              <strong>${escapeHtml(c.author)}</strong>
+              <span class="small muted"> • ${escapeHtml(roleName(c.authorRole))}</span>
+            </div>
+            <span class="small muted">${escapeHtml(fmtTime(c.createdAt))}</span>
+          </div>
+          <p>${escapeHtml(c.body)}</p>
+        </div>
+      `).join("");
+
+      return `
+        <div class="post">
+          <div class="post-head">
+            <div class="post-meta">
+              <strong>${escapeHtml(post.title || "(untitled)")}</strong>
+              <span>${escapeHtml(post.author)} • ${escapeHtml(roleName(post.authorRole))} • ${escapeHtml(fmtTime(post.createdAt))}</span>
+            </div>
+            <div class="chipbar">
+              ${pin}
+              ${tag}
+              ${canPin ? `<button class="btn ghost" data-pin="${escapeAttr(post.id)}">${post.pinned ? "Unpin" : "Pin"}</button>` : ""}
+              ${canModerate ? `<button class="btn ghost danger" data-del="${escapeAttr(post.id)}">Delete</button>` : ""}
+            </div>
+          </div>
+
+          <div class="post-body">${escapeHtml(post.body)}</div>
+          ${media}
+
+          <div class="comment">
+            <div class="row" style="justify-content:space-between">
+              <strong class="small">Comments</strong>
+              <span class="small muted">${(post.comments||[]).length} total</span>
+            </div>
+
+            ${commentsHtml || `<div class="hint">No comments yet.</div>`}
+
+            <div class="row" style="gap:10px">
+              <input class="input grow" data-commentbox="${escapeAttr(post.id)}" placeholder="Write a comment…" />
+              <button class="btn" data-comment="${escapeAttr(post.id)}">Comment</button>
+            </div>
+            <div class="hint">Tip: <span class="kbd">Ctrl</span> + <span class="kbd">Enter</span> to comment.</div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderAll(){
+      renderProfile();
+      renderAccessList();
+      renderChannelList();
+      renderMain();
+    }
+
+    // Actions
+    function saveProfile(){
+      const name = $("displayName").value.trim() || "Guest";
+      const role = $("roleSelect").value;
+
+      state.profile.name = name;
+      state.profile.role = role;
+
+      // Ensure active channel is visible
+      const visible = state.channels.filter(c => canSeeChannel(c, role));
+      if (!visible.find(c => c.id === state.ui.activeChannelId)){
+        state.ui.activeChannelId = visible[0]?.id ?? null;
+      }
+
+      saveState(state);
+      renderAll();
+    }
+
+    function createChannel(){
+      const roleId = state.profile.role;
+      const isStaff = ["owner","admin","coach","assistant"].includes(roleId);
+      if (!isStaff){
+        alert("Only staff roles can create channels in this demo.");
+        return;
+      }
+
+      const name = $("newChannelName").value.trim();
+      const visibility = $("newChannelVisibility").value;
+
+      if (!name){
+        alert("Please enter a channel name.");
+        return;
+      }
+
+      const newCh = {
+        id: uid(),
+        name: name.startsWith("#") ? name : "💬 " + name,
+        desc: "Custom channel",
+        visibility,
+        postPermissions: presetById(visibility)?.allowed ?? ["owner","admin","coach","assistant"]
+      };
+
+      state.channels.unshift(newCh);
+      state.ui.activeChannelId = newCh.id;
+      $("newChannelName").value = "";
+      saveState(state);
+      renderAll();
+    }
+
+    function publishPost(){
+      const channel = state.channels.find(c => c.id === state.ui.activeChannelId);
+      if (!channel) return;
+
+      const roleId = state.profile.role;
+      if (!canPostInChannel(channel, roleId)){
+        alert("Posting is restricted in this channel.");
+        return;
+      }
+
+      const title = $("postTitle").value.trim();
+      const body = $("postBody").value.trim();
+      const tag = $("postTag").value;
+      const media = $("postMedia").value.trim();
+
+      if (!title && !body){
+        alert("Add a title or body.");
+        return;
+      }
+
+      const post = makePost({
+        author: state.profile.name,
+        role: roleId,
+        title: title || "(untitled)",
+        body: body || "",
+        tag,
+        media,
+        pinned: false
+      });
+
+      state.postsByChannel[channel.id] = state.postsByChannel[channel.id] || [];
+      state.postsByChannel[channel.id].unshift(post);
+
+      $("postTitle").value = "";
+      $("postBody").value = "";
+      $("postMedia").value = "";
+      $("postTag").value = "";
+
+      saveState(state);
+      renderMain();
+    }
+
+    function togglePin(channelId, postId){
+      const posts = state.postsByChannel[channelId] || [];
+      const p = posts.find(x => x.id === postId);
+      if (!p) return;
+
+      const roleId = state.profile.role;
+      const canPin = ["owner","admin","coach","assistant"].includes(roleId);
+      if (!canPin){
+        alert("Only staff can pin posts.");
+        return;
+      }
+
+      p.pinned = !p.pinned;
+      saveState(state);
+      renderMain();
+    }
+
+    function deletePost(channelId, postId){
+      const roleId = state.profile.role;
+      const canModerate = ["owner","admin","coach"].includes(roleId);
+      if (!canModerate){
+        alert("Only Owner/Admin/Coach can delete posts.");
+        return;
+      }
+      const posts = state.postsByChannel[channelId] || [];
+      state.postsByChannel[channelId] = posts.filter(p => p.id !== postId);
+      saveState(state);
+      renderMain();
+    }
+
+    function addComment(channelId, postId, text){
+      const posts = state.postsByChannel[channelId] || [];
+      const p = posts.find(x => x.id === postId);
+      if (!p) return;
+
+      p.comments = p.comments || [];
+      p.comments.push({
+        id: uid(),
+        author: state.profile.name,
+        authorRole: state.profile.role,
+        body: text,
+        createdAt: new Date().toISOString()
+      });
+
+      saveState(state);
+    }
+
+    function togglePinnedOnly(){
+      state.ui.pinnedOnly = !state.ui.pinnedOnly;
+      saveState(state);
+      $("togglePinned").textContent = state.ui.pinnedOnly ? "Showing pinned" : "Show pinned only";
+      renderMain();
+    }
+
+    function setNewest(){
+      state.ui.sort = "newest";
+      saveState(state);
+      renderMain();
+    }
+
+    // Event wiring
+    function wireEvents(){
+      $("saveProfile").addEventListener("click", saveProfile);
+      $("createChannel").addEventListener("click", createChannel);
+      $("resetAll").addEventListener("click", () => {
+        if (confirm("Reset all demo data? This clears localStorage for The Snake Pit.")) resetState();
+      });
+
+      $("channelSearch").addEventListener("input", (e) => {
+        state.ui.channelSearch = e.target.value;
+        saveState(state);
+        renderChannelList();
+      });
+
+      $("publishPost").addEventListener("click", publishPost);
+      $("postBody").addEventListener("keydown", (e) => {
+        if (e.key === "Enter" && (e.ctrlKey || e.metaKey)){
+          e.preventDefault();
+          publishPost();
+        }
+      });
+
+      $("togglePinned").addEventListener("click", togglePinnedOnly);
+      $("sortNewest").addEventListener("click", setNewest);
+    }
+
+    // Utilities: escaping to prevent HTML injection (even in a local demo)
+    function escapeHtml(str){
+      return String(str ?? "")
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
+    }
+    function escapeAttr(str){
+      return escapeHtml(str).replaceAll("`","&#096;");
+    }
+
+    // Boot
+    initSelects();
+    seedPosts(state);
+    saveState(state);
+    wireEvents();
+    renderAll();
+  </script>
+</body>
+</html>
